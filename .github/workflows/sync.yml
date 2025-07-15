@@ -1,0 +1,44 @@
+name: Sync Fork
+
+on:
+  schedule:
+    # 每天凌晨2点（UTC时间）运行，你可以根据需要调整
+    - cron: '0 2 * * *' 
+  workflow_dispatch:
+    # 允许手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # `fetch-depth: 0` 是为了确保能获取到所有历史，如果只需要同步最新状态，可以省略
+          fetch-depth: 0 
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/voici5986/cherry-studio.git
+          git fetch upstream
+
+      - name: Merge upstream/main into main
+        run: |
+          git checkout main
+          git merge upstream/main --allow-unrelated-histories
+          # 如果你的仓库可能存在与上游不相关的历史，需要加上 --allow-unrelated-histories
+          # 如果你的fork是基于上游的，通常不需要此选项，可以删除。
+          # 建议先手动测试一次合并，确认是否需要此选项。
+
+      - name: Push changes
+        run: |
+          git push origin main
+        env:
+          # 使用GitHub Actions的默认Token，它有权限推送到当前仓库
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
