@@ -7,7 +7,7 @@ import { Assistant, WebSearchProvider } from '@renderer/types'
 import { hasObjectKey } from '@renderer/utils'
 import { Tooltip } from 'antd'
 import { Globe } from 'lucide-react'
-import { FC, memo, useCallback, useImperativeHandle, useMemo } from 'react'
+import { FC, memo, startTransition, useCallback, useImperativeHandle, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export interface WebSearchButtonRef {
@@ -29,22 +29,22 @@ const WebSearchButton: FC<Props> = ({ ref, assistant, ToolbarButton }) => {
   const enableWebSearch = assistant?.webSearchProviderId || assistant.enableWebSearch
 
   const updateSelectedWebSearchProvider = useCallback(
-    (providerId?: WebSearchProvider['id']) => {
+    async (providerId?: WebSearchProvider['id']) => {
       // TODO: updateAssistant有性能问题，会导致关闭快捷面板卡顿
-      setTimeout(() => {
-        const currentWebSearchProviderId = assistant.webSearchProviderId
-        const newWebSearchProviderId = currentWebSearchProviderId === providerId ? undefined : providerId
+      const currentWebSearchProviderId = assistant.webSearchProviderId
+      const newWebSearchProviderId = currentWebSearchProviderId === providerId ? undefined : providerId
+      startTransition(() => {
         updateAssistant({ ...assistant, webSearchProviderId: newWebSearchProviderId, enableWebSearch: false })
-      }, 200)
+      })
     },
     [assistant, updateAssistant]
   )
 
-  const updateSelectedWebSearchBuiltin = useCallback(() => {
+  const updateSelectedWebSearchBuiltin = useCallback(async () => {
     // TODO: updateAssistant有性能问题，会导致关闭快捷面板卡顿
-    setTimeout(() => {
+    startTransition(() => {
       updateAssistant({ ...assistant, webSearchProviderId: undefined, enableWebSearch: !assistant.enableWebSearch })
-    }, 200)
+    })
   }, [assistant, updateAssistant])
 
   const providerItems = useMemo<QuickPanelListItem[]>(() => {
@@ -67,7 +67,7 @@ const WebSearchButton: FC<Props> = ({ ref, assistant, ToolbarButton }) => {
 
     if (isWebSearchModelEnabled) {
       items.unshift({
-        label: t('chat.input.web_search.builtin'),
+        label: t('chat.input.web_search.builtin.label'),
         description: isWebSearchModelEnabled
           ? t('chat.input.web_search.builtin.enabled_content')
           : t('chat.input.web_search.builtin.disabled_content'),
@@ -91,15 +91,17 @@ const WebSearchButton: FC<Props> = ({ ref, assistant, ToolbarButton }) => {
 
   const openQuickPanel = useCallback(() => {
     if (assistant.webSearchProviderId) {
-      return updateSelectedWebSearchProvider(undefined)
+      updateSelectedWebSearchProvider(undefined)
+      return
     }
 
     if (assistant.enableWebSearch) {
-      return updateSelectedWebSearchBuiltin()
+      updateSelectedWebSearchBuiltin()
+      return
     }
 
     quickPanel.open({
-      title: t('chat.input.web_search'),
+      title: t('chat.input.web_search.label'),
       list: providerItems,
       symbol: '?',
       pageSize: 9
@@ -129,14 +131,14 @@ const WebSearchButton: FC<Props> = ({ ref, assistant, ToolbarButton }) => {
   return (
     <Tooltip
       placement="top"
-      title={enableWebSearch ? t('common.close') : t('chat.input.web_search')}
+      title={enableWebSearch ? t('common.close') : t('chat.input.web_search.label')}
       mouseLeaveDelay={0}
       arrow>
       <ToolbarButton type="text" onClick={handleOpenQuickPanel}>
         <Globe
           size={18}
           style={{
-            color: enableWebSearch ? 'var(--color-link)' : 'var(--color-icon)'
+            color: enableWebSearch ? 'var(--color-primary)' : 'var(--color-icon)'
           }}
         />
       </ToolbarButton>
