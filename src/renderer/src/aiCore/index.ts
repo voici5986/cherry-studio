@@ -9,9 +9,9 @@ import type { GenerateImageParams, Model, Provider } from '@renderer/types'
 import type { RequestOptions, SdkModel } from '@renderer/types/sdk'
 import { isEnabledToolUse } from '@renderer/utils/mcp-tools'
 
-import { AihubmixAPIClient } from './clients/AihubmixAPIClient'
+import { AihubmixAPIClient } from './clients/aihubmix/AihubmixAPIClient'
 import { VertexAPIClient } from './clients/gemini/VertexAPIClient'
-import { NewAPIClient } from './clients/NewAPIClient'
+import { NewAPIClient } from './clients/newapi/NewAPIClient'
 import { OpenAIResponseAPIClient } from './clients/openai/OpenAIResponseAPIClient'
 import { CompletionsMiddlewareBuilder } from './middleware/builder'
 import { MIDDLEWARE_NAME as AbortHandlerMiddlewareName } from './middleware/common/AbortHandlerMiddleware'
@@ -112,7 +112,7 @@ export default class AiProvider {
         builder.remove(ToolUseExtractionMiddlewareName)
         logger.silly('ToolUseExtractionMiddleware is removed')
       }
-      if (params.callType !== 'chat') {
+      if (params.callType !== 'chat' && params.callType !== 'check' && params.callType !== 'translate') {
         logger.silly('AbortHandlerMiddleware is removed')
         builder.remove(AbortHandlerMiddlewareName)
       }

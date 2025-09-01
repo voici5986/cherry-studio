@@ -22,6 +22,7 @@ import {
   Tool
 } from '@google/genai'
 import OpenAI, { AzureOpenAI } from 'openai'
+import { ChatCompletionContentPartImage } from 'openai/resources'
 import { Stream } from 'openai/streaming'
 
 import { EndpointType } from './index'
@@ -81,7 +82,18 @@ export type ReasoningEffortOptionalParams = {
   thinking_budget?: number
   incremental_output?: boolean
   enable_reasoning?: boolean
-  extra_body?: Record<string, any>
+  // nvidia
+  chat_template_kwargs?: {
+    thinking: boolean
+  }
+  extra_body?: {
+    google?: {
+      thinking_config: {
+        thinking_budget: number
+        include_thoughts?: boolean
+      }
+    }
+  }
   // Add any other potential reasoning-related keys here if they exist
 }
 
@@ -96,8 +108,12 @@ export type OpenAISdkRawChunk =
 
 export type OpenAISdkRawOutput = Stream<OpenAI.Chat.Completions.ChatCompletionChunk> | OpenAI.ChatCompletion
 export type OpenAISdkRawContentSource =
-  | OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta
-  | OpenAI.Chat.Completions.ChatCompletionMessage
+  | (OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta & {
+      images?: ChatCompletionContentPartImage[]
+    })
+  | (OpenAI.Chat.Completions.ChatCompletionMessage & {
+      images?: ChatCompletionContentPartImage[]
+    })
 
 export type OpenAISdkMessageParam = OpenAI.Chat.Completions.ChatCompletionMessageParam
 
@@ -162,6 +178,7 @@ export interface AwsBedrockSdkParams {
   topP?: number
   stream?: boolean
   tools?: AwsBedrockSdkTool[]
+  [key: string]: any // Allow any additional custom parameters
 }
 
 export interface AwsBedrockSdkMessageParam {
@@ -206,6 +223,22 @@ export interface AwsBedrockSdkMessageParam {
   }>
 }
 
+export interface AwsBedrockStreamChunk {
+  type: string
+  delta?: {
+    text?: string
+    toolUse?: { input?: string }
+    type?: string
+    thinking?: string
+  }
+  index?: number
+  content_block?: any
+  usage?: {
+    inputTokens?: number
+    outputTokens?: number
+  }
+}
+
 export interface AwsBedrockSdkRawChunk {
   contentBlockStart?: {
     start?: {
@@ -222,6 +255,8 @@ export interface AwsBedrockSdkRawChunk {
       toolUse?: {
         input?: string
       }
+      type?: string // 支持 'thinking_delta' 等类型
+      thinking?: string // 支持 thinking 内容
     }
     contentBlockIndex?: number
   }

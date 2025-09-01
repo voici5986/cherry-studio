@@ -1,11 +1,16 @@
-import { getHttpMessageLabel } from '@renderer/i18n/label'
+import { useTimer } from '@renderer/hooks/useTimer'
+import { getHttpMessageLabel, getProviderLabel } from '@renderer/i18n/label'
+import { getProviderById } from '@renderer/services/ProviderService'
 import { useAppDispatch } from '@renderer/store'
 import { removeBlocksThunk } from '@renderer/store/thunk/messageThunk'
 import type { ErrorMessageBlock, Message } from '@renderer/types/newMessage'
 import { Alert as AntdAlert } from 'antd'
 import React from 'react'
-import { useTranslation } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+
+const HTTP_ERROR_CODES = [400, 401, 403, 404, 429, 500, 502, 503, 504]
 
 interface Props {
   block: ErrorMessageBlock
@@ -16,35 +21,68 @@ const ErrorBlock: React.FC<Props> = ({ block, message }) => {
   return <MessageErrorInfo block={block} message={message} />
 }
 
-const MessageErrorInfo: React.FC<{ block: ErrorMessageBlock; message: Message }> = ({ block, message }) => {
+const ErrorMessage: React.FC<{ block: ErrorMessageBlock }> = ({ block }) => {
   const { t, i18n } = useTranslation()
-  const dispatch = useAppDispatch()
 
-  const HTTP_ERROR_CODES = [400, 401, 403, 404, 429, 500, 502, 503, 504]
+  const i18nKey = `error.${block.error?.i18nKey}`
+  const errorKey = `error.${block.error?.message}`
+  const errorStatus = block.error?.status
 
-  const onRemoveBlock = () => {
-    setTimeout(() => dispatch(removeBlocksThunk(message.topicId, message.id, [block.id])), 350)
+  if (i18n.exists(i18nKey)) {
+    const providerId = block.error?.providerId
+    if (providerId) {
+      return (
+        <Trans
+          i18nKey={i18nKey}
+          values={{ provider: getProviderLabel(providerId) }}
+          components={{
+            provider: (
+              <Link
+                style={{ color: 'var(--color-link)' }}
+                to={`/settings/provider`}
+                state={{ provider: getProviderById(providerId) }}
+              />
+            )
+          }}
+        />
+      )
+    }
   }
 
-  if (block.error && HTTP_ERROR_CODES.includes(block.error?.status)) {
+  if (i18n.exists(errorKey)) {
+    return t(errorKey)
+  }
+
+  if (HTTP_ERROR_CODES.includes(errorStatus)) {
     return (
-      <Alert
-        description={getHttpMessageLabel(block.error.status)}
-        message={block.error?.message}
-        type="error"
-        closable
-        onClose={onRemoveBlock}
-      />
+      <h5>
+        {getHttpMessageLabel(errorStatus)} {block.error?.message}
+      </h5>
     )
   }
 
-  if (block?.error?.message) {
-    const errorKey = `error.${block.error.message}`
-    const pauseErrorLanguagePlaceholder = i18n.exists(errorKey) ? t(errorKey) : block.error.message
-    return <Alert description={pauseErrorLanguagePlaceholder} type="error" closable onClose={onRemoveBlock} />
+  return block.error?.message || ''
+}
+
+const ErrorDescription: React.FC<{ block: ErrorMessageBlock }> = ({ block }) => {
+  const { t } = useTranslation()
+
+  if (block.error) {
+    return <ErrorMessage block={block} />
   }
 
-  return <Alert description={t('error.chat.response')} type="error" closable onClose={onRemoveBlock} />
+  return <>{t('error.chat.response')}</>
+}
+
+const MessageErrorInfo: React.FC<{ block: ErrorMessageBlock; message: Message }> = ({ block, message }) => {
+  const dispatch = useAppDispatch()
+  const { setTimeoutTimer } = useTimer()
+
+  const onRemoveBlock = () => {
+    setTimeoutTimer('onRemoveBlock', () => dispatch(removeBlocksThunk(message.topicId, message.id, [block.id])), 350)
+  }
+
+  return <Alert description={<ErrorDescription block={block} />} type="error" closable onClose={onRemoveBlock} />
 }
 
 const Alert = styled(AntdAlert)`

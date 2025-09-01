@@ -14,7 +14,7 @@ interface CodeViewerProps {
   language: string
   children: string
   expanded?: boolean
-  unwrapped?: boolean
+  wrapped?: boolean
   onHeightChange?: (scrollHeight: number) => void
   className?: string
 }
@@ -25,7 +25,7 @@ interface CodeViewerProps {
  * - 使用虚拟滚动和按需高亮，改善页面内有大量长代码块时的响应
  * - 并发安全
  */
-const CodeViewer = ({ children, language, expanded, unwrapped, onHeightChange, className }: CodeViewerProps) => {
+const CodeViewer = ({ children, language, expanded, wrapped, onHeightChange, className }: CodeViewerProps) => {
   const { codeShowLineNumbers, fontSize } = useSettings()
   const { getShikiPreProperties, isShikiThemeDark } = useCodeStyle()
   const shikiThemeRef = useRef<HTMLDivElement>(null)
@@ -54,7 +54,8 @@ const CodeViewer = ({ children, language, expanded, unwrapped, onHeightChange, c
         if (properties.style) {
           shikiTheme.style.cssText += `${properties.style}`
         }
-        shikiTheme.tabIndex = properties.tabindex
+        // FIXME: 临时解决 SelectionToolbar 无法弹出，走剪贴板回退的问题
+        // shikiTheme.tabIndex = properties.tabindex
       }
     })
     return () => {
@@ -107,7 +108,7 @@ const CodeViewer = ({ children, language, expanded, unwrapped, onHeightChange, c
       <ScrollContainer
         ref={scrollerRef}
         className="shiki-scroller"
-        $wrap={!unwrapped}
+        $wrap={wrapped}
         $expanded={expanded}
         $lineHeight={estimateSize()}
         style={
@@ -256,6 +257,7 @@ const ScrollContainer = styled.div<{
     .line-content {
       flex: 1;
       padding-right: 1em;
+      white-space: pre;
       * {
         white-space: ${(props) => (props.$wrap ? 'pre-wrap' : 'pre')};
         overflow-wrap: ${(props) => (props.$wrap ? 'break-word' : 'normal')};

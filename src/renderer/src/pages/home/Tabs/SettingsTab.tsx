@@ -26,9 +26,9 @@ import {
   setCodeShowLineNumbers,
   setCodeViewer,
   setCodeWrappable,
-  setEnableBackspaceDeleteModel,
   setEnableQuickPanelTriggers,
   setFontSize,
+  setMathEnableSingleDollar,
   setMathEngine,
   setMessageFont,
   setMessageNavigation,
@@ -38,6 +38,7 @@ import {
   setPasteLongTextThreshold,
   setRenderInputMessageAsMarkdown,
   setShowInputEstimatedTokens,
+  setShowMessageOutline,
   setShowPrompt,
   setShowTranslateConfirm,
   setThoughtAutoCollapse
@@ -71,7 +72,7 @@ const SettingsTab: FC<Props> = (props) => {
   const [enableMaxTokens, setEnableMaxTokens] = useState(assistant?.settings?.enableMaxTokens ?? false)
   const [maxTokens, setMaxTokens] = useState(assistant?.settings?.maxTokens ?? 0)
   const [fontSizeValue, setFontSizeValue] = useState(fontSize)
-  const [streamOutput, setStreamOutput] = useState(assistant?.settings?.streamOutput ?? true)
+  const [streamOutput, setStreamOutput] = useState(assistant?.settings?.streamOutput)
   const { translateLanguages } = useTranslate()
 
   const { t } = useTranslation()
@@ -96,14 +97,15 @@ const SettingsTab: FC<Props> = (props) => {
     codeImageTools,
     codeExecution,
     mathEngine,
+    mathEnableSingleDollar,
     autoTranslateWithSpace,
     pasteLongTextThreshold,
     multiModelMessageStyle,
     thoughtAutoCollapse,
     messageNavigation,
     enableQuickPanelTriggers,
-    enableBackspaceDeleteModel,
-    showTranslateConfirm
+    showTranslateConfirm,
+    showMessageOutline
   } = useSettings()
 
   const onUpdateAssistantSettings = (settings: Partial<AssistantSettings>) => {
@@ -333,6 +335,15 @@ const SettingsTab: FC<Props> = (props) => {
           </SettingRow>
           <SettingDivider />
           <SettingRow>
+            <SettingRowTitleSmall>{t('settings.messages.show_message_outline')}</SettingRowTitleSmall>
+            <Switch
+              size="small"
+              checked={showMessageOutline}
+              onChange={(checked) => dispatch(setShowMessageOutline(checked))}
+            />
+          </SettingRow>
+          <SettingDivider />
+          <SettingRow>
             <SettingRowTitleSmall>{t('message.message.style.label')}</SettingRowTitleSmall>
             <Selector
               value={messageStyle}
@@ -372,19 +383,6 @@ const SettingsTab: FC<Props> = (props) => {
           </SettingRow>
           <SettingDivider />
           <SettingRow>
-            <SettingRowTitleSmall>{t('settings.messages.math_engine.label')}</SettingRowTitleSmall>
-            <Selector
-              value={mathEngine}
-              onChange={(value) => dispatch(setMathEngine(value as MathEngine))}
-              options={[
-                { value: 'KaTeX', label: 'KaTeX' },
-                { value: 'MathJax', label: 'MathJax' },
-                { value: 'none', label: t('settings.messages.math_engine.none') }
-              ]}
-            />
-          </SettingRow>
-          <SettingDivider />
-          <SettingRow>
             <SettingRowTitleSmall>{t('settings.font_size.title')}</SettingRowTitleSmall>
           </SettingRow>
           <Row align="middle" gutter={10}>
@@ -404,6 +402,37 @@ const SettingsTab: FC<Props> = (props) => {
               />
             </Col>
           </Row>
+          <SettingDivider />
+        </SettingGroup>
+      </CollapsibleSettingGroup>
+      <CollapsibleSettingGroup title={t('settings.math.title')} defaultExpanded={true}>
+        <SettingGroup>
+          <SettingRow>
+            <SettingRowTitleSmall>{t('settings.math.engine.label')}</SettingRowTitleSmall>
+            <Selector
+              value={mathEngine}
+              onChange={(value) => dispatch(setMathEngine(value as MathEngine))}
+              options={[
+                { value: 'KaTeX', label: 'KaTeX' },
+                { value: 'MathJax', label: 'MathJax' },
+                { value: 'none', label: t('settings.math.engine.none') }
+              ]}
+            />
+          </SettingRow>
+          <SettingDivider />
+          <SettingRow>
+            <SettingRowTitleSmall>
+              {t('settings.math.single_dollar.label')}{' '}
+              <Tooltip title={t('settings.math.single_dollar.tip')}>
+                <CircleHelp size={14} style={{ marginLeft: 4 }} color="var(--color-text-2)" />
+              </Tooltip>
+            </SettingRowTitleSmall>
+            <Switch
+              size="small"
+              checked={mathEnableSingleDollar}
+              onChange={(checked) => dispatch(setMathEnableSingleDollar(checked))}
+            />
+          </SettingRow>
           <SettingDivider />
         </SettingGroup>
       </CollapsibleSettingGroup>
@@ -614,15 +643,6 @@ const SettingsTab: FC<Props> = (props) => {
               size="small"
               checked={enableQuickPanelTriggers}
               onChange={(checked) => dispatch(setEnableQuickPanelTriggers(checked))}
-            />
-          </SettingRow>
-          <SettingDivider />
-          <SettingRow>
-            <SettingRowTitleSmall>{t('settings.messages.input.enable_delete_model')}</SettingRowTitleSmall>
-            <Switch
-              size="small"
-              checked={enableBackspaceDeleteModel}
-              onChange={(checked) => dispatch(setEnableBackspaceDeleteModel(checked))}
             />
           </SettingRow>
           <SettingDivider />
