@@ -677,6 +677,7 @@
     "model_placeholder": "选择要使用的模型",
     "model_required": "请选择模型",
     "select_folder": "选择文件夹",
+    "supported_providers": "支持的服务商",
     "title": "代码工具",
     "update_options": "更新选项",
     "working_directory": "工作目录"
@@ -1319,7 +1320,8 @@
       "delete": {
         "content": "删除分组消息会删除用户提问和所有助手的回答",
         "title": "删除分组消息"
-      }
+      },
+      "retry_failed": "重试出错的消息"
     },
     "ignore": {
       "knowledge": {
@@ -1550,6 +1552,7 @@
       "selected": "已选标签"
     },
     "function_calling": "函数调用",
+    "invalid_model": "无效模型",
     "no_matches": "无可用模型",
     "parameter_name": "参数名称",
     "parameter_type": {
@@ -1623,6 +1626,7 @@
     "only_markdown": "仅支持 Markdown 格式",
     "only_one_file_allowed": "只能上传一个文件",
     "open_folder": "打开外部文件夹",
+    "open_outside": "从外部打开",
     "rename": "重命名",
     "rename_changed": "由于安全策略，文件名已从 {{original}} 更改为 {{final}}",
     "save": "保存到笔记",
@@ -3346,6 +3350,8 @@
         "label": "网格详情触发"
       },
       "input": {
+        "confirm_delete_message": "删除消息前确认",
+        "confirm_regenerate_message": "重新生成消息前确认",
         "enable_quick_triggers": "启用 / 和 @ 触发快捷菜单",
         "paste_long_text_as_file": "长文本粘贴为文件",
         "paste_long_text_threshold": "长文本长度",

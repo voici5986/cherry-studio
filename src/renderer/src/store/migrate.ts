@@ -1604,7 +1604,6 @@ const migrateConfig = {
       if (state.paintings && !state.paintings.tokenflux_paintings) {
         state.paintings.tokenflux_paintings = []
       }
-      state.settings.showTokens = true
       state.settings.testPlan = false
       return state
     } catch (error) {
@@ -2312,6 +2311,59 @@ const migrateConfig = {
       return state
     } catch (error) {
       logger.error('migrate 142 error', error as Error)
+      return state
+    }
+  },
+  '143': (state: RootState) => {
+    try {
+      addMiniApp(state, 'longcat')
+      return state
+    } catch (error) {
+      return state
+    }
+  },
+  '144': (state: RootState) => {
+    try {
+      if (state.settings) {
+        state.settings.confirmDeleteMessage = settingsInitialState.confirmDeleteMessage
+        state.settings.confirmRegenerateMessage = settingsInitialState.confirmRegenerateMessage
+      }
+      return state
+    } catch (error) {
+      logger.error('migrate 144 error', error as Error)
+      return state
+    }
+  },
+  '145': (state: RootState) => {
+    try {
+      if (state.settings) {
+        if (state.settings.showMessageOutline === undefined || state.settings.showMessageOutline === null) {
+          state.settings.showMessageOutline = false
+        }
+      }
+      return state
+    } catch (error) {
+      logger.error('migrate 145 error', error as Error)
+      return state
+    }
+  },
+  '146': (state: RootState) => {
+    try {
+      // Migrate showWorkspace from settings to note store
+      if (state.settings && state.note) {
+        const showWorkspaceValue = (state.settings as any)?.showWorkspace
+        if (showWorkspaceValue !== undefined) {
+          state.note.settings.showWorkspace = showWorkspaceValue
+          // Remove from settings
+          delete (state.settings as any).showWorkspace
+        } else if (state.note.settings.showWorkspace === undefined) {
+          // Set default value if not exists
+          state.note.settings.showWorkspace = true
+        }
+      }
+      return state
+    } catch (error) {
+      logger.error('migrate 146 error', error as Error)
       return state
     }
   }
